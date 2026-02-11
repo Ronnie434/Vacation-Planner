@@ -75,13 +75,15 @@ export async function resetPassword(
 
 // --- Plans ---
 export async function getPlans(params: SearchParams) {
-  const { data } = await api.get<PlanningResponse>("/plans", { params });
+  const { data } = await api.get<PlanningResponse>("/plans", {
+    params: { ...params, json_only: true },
+  });
   return data;
 }
 
 export async function getPlanDetails(id: string, date?: string) {
   const { data } = await api.get<TripDetailResponse>(`/plans/${id}`, {
-    params: { date },
+    params: { date, json_only: true },
   });
   return data;
 }
@@ -136,7 +138,8 @@ export async function deletePlan(username: string, planId: string) {
 
 export async function getUserSavedPlanDetails(planId: string) {
   const { data } = await api.get<TripDetailResponse>(
-    `/users/plan/${planId}`
+    `/users/plan/${planId}`,
+    { params: { json_only: true } }
   );
   return data;
 }
