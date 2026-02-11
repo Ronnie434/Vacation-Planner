@@ -104,7 +104,7 @@ func (p *MyPlanner) userLogin(ctx *gin.Context) {
 	p.loginHelper(ctx, c, true)
 }
 
-func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLogin bool) (loggedIn bool) {
+func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLogin bool) (loggedIn bool, jwtToken string) {
 	logger := iowrappers.Logger
 
 	u, token, tokenExpirationTime, loginErr := p.RedisClient.Authenticate(ctx, c)
@@ -120,7 +120,7 @@ func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLog
 				Status: "Unauthorized",
 			})
 		}
-		return false
+		return false, ""
 	} else {
 		logger.Infof("user is logged in: %+v", u)
 	}
@@ -131,7 +131,7 @@ func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLog
 		Expires: tokenExpirationTime,
 		Secure:  true,
 	})
-	return true
+	return true, token
 }
 
 type AuthErrorType string

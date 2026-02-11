@@ -1044,8 +1044,8 @@ func (p *MyPlanner) oauthCallback(ctx *gin.Context) {
 		if frontendURL == "" {
 			frontendURL = "http://localhost:3000"
 		}
-		if p.loginHelper(ctx, u, false) {
-			ctx.Redirect(http.StatusFound, frontendURL)
+		if loggedIn, jwtToken := p.loginHelper(ctx, u, false); loggedIn {
+			ctx.Redirect(http.StatusFound, frontendURL+"/auth/callback?token="+url.QueryEscape(jwtToken))
 		} else {
 			ctx.Redirect(http.StatusFound, frontendURL+"/login")
 		}
