@@ -1040,10 +1040,14 @@ func (p *MyPlanner) oauthCallback(ctx *gin.Context) {
 		}
 
 		u := user.Credential{Email: userCredentials.Email, WithOAuth: true}
+		frontendURL := os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			frontendURL = "http://localhost:3000"
+		}
 		if p.loginHelper(ctx, u, false) {
-			ctx.Redirect(http.StatusPermanentRedirect, "/v1")
+			ctx.Redirect(http.StatusFound, frontendURL)
 		} else {
-			ctx.Redirect(http.StatusPermanentRedirect, "/v1/log-in")
+			ctx.Redirect(http.StatusFound, frontendURL+"/login")
 		}
 	}
 }
@@ -1053,7 +1057,11 @@ func (p *MyPlanner) userClickOnEmailVerification(ctx *gin.Context) {
 	if err := p.RedisClient.CreateUserOnEmailVerified(ctx, code); err != nil {
 		ctx.String(http.StatusBadRequest, "failed to verify user email, please contact Vacation Planner")
 	}
-	ctx.Redirect(http.StatusMovedPermanently, "/v1/log-in")
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+	ctx.Redirect(http.StatusFound, frontendURL+"/login")
 }
 
 func (p *MyPlanner) userResetPassword(ctx *gin.Context) {
