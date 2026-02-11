@@ -16,14 +16,6 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-api.interceptors.request.use((config) => {
-  const token = Cookies.get("JWT");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 // --- Auth ---
 export async function login(email: string, password: string) {
   const { data } = await api.post<UserLoginResponse>("/login", {
@@ -31,7 +23,8 @@ export async function login(email: string, password: string) {
     password,
   });
   if (data.jwt) {
-    Cookies.set("JWT", data.jwt, { path: "/", secure: true, sameSite: "lax" });
+    const isSecure = window.location.protocol === "https:";
+    Cookies.set("JWT", data.jwt, { path: "/", secure: isSecure, sameSite: "lax" });
   }
   return data;
 }
