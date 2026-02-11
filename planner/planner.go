@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -40,7 +39,6 @@ import (
 	"github.com/weihesdlegend/Vacation-planner/POI"
 	"github.com/weihesdlegend/Vacation-planner/iowrappers"
 	"github.com/weihesdlegend/Vacation-planner/user"
-	"github.com/weihesdlegend/Vacation-planner/utils"
 
 	mgin "github.com/ulule/limiter/v3/drivers/middleware/gin"
 )
@@ -69,21 +67,19 @@ var placeTypeToIcon = map[POI.PlaceCategory]POI.PlaceIcon{
 }
 
 type MyPlanner struct {
-	RedisClient        *iowrappers.RedisClient
-	RedisStreamName    string
-	PhotoClient        iowrappers.PhotoClient
-	Solver             Solver
-	ResultHTMLTemplate *template.Template
-	TripHTMLTemplate   *template.Template
-	PlanningEvents     chan iowrappers.PlanningEvent
-	Environment        Environment
-	Configs            map[string]interface{}
-	OAuth2Config       *oauth2.Config
-	Mailer             *iowrappers.Mailer
-	GeonamesApiKey     string
-	MapsClientApiKey   string
-	BlobBucket         string
-	Dispatcher         *Dispatcher
+	RedisClient     *iowrappers.RedisClient
+	RedisStreamName string
+	PhotoClient     iowrappers.PhotoClient
+	Solver          Solver
+	PlanningEvents  chan iowrappers.PlanningEvent
+	Environment     Environment
+	Configs         map[string]interface{}
+	OAuth2Config    *oauth2.Config
+	Mailer          *iowrappers.Mailer
+	GeonamesApiKey  string
+	MapsClientApiKey string
+	BlobBucket      string
+	Dispatcher      *Dispatcher
 }
 
 type TimeSectionPlace struct {
@@ -122,27 +118,26 @@ type PlanningPostRequest struct {
 	NumEatery uint        `json:"num_eatery"`
 }
 
-// TODO: deprecate Score and ScoreOld fields
 type TripDetailResp struct {
-	OriginalPlanID    string
-	LatLongs          [][2]float64
-	PlaceCategories   []POI.PlaceCategory
-	PlaceDetails      []PlaceDetailsResp
-	ShownActive       []bool
-	TravelDestination string
-	TravelDate        string
-	Score             float64
-	ScoreOld          float64
-	ApiKey            string
+	OriginalPlanID    string              `json:"original_plan_id"`
+	LatLongs          [][2]float64        `json:"lat_longs"`
+	PlaceCategories   []POI.PlaceCategory `json:"place_categories"`
+	PlaceDetails      []PlaceDetailsResp  `json:"place_details"`
+	ShownActive       []bool              `json:"shown_active"`
+	TravelDestination string              `json:"travel_destination"`
+	TravelDate        string              `json:"travel_date"`
+	Score             float64             `json:"score"`
+	ScoreOld          float64             `json:"score_old"`
+	ApiKey            string              `json:"-"`
 }
 
 type PlaceDetailsResp struct {
-	ID               string
-	Name             string
-	URL              string
-	FormattedAddress string
-	PhotoURL         string
-	Summary          string
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	URL              string `json:"url"`
+	FormattedAddress string `json:"formatted_address"`
+	PhotoURL         string `json:"photo_url"`
+	Summary          string `json:"summary"`
 }
 
 type RequestIdKey string
@@ -156,8 +151,6 @@ func (p *MyPlanner) Init(mapsClientApiKey string, redisURL *url.URL, redisStream
 		p.RedisStreamName = "stream:planning_api_usage"
 	}
 
-	p.ResultHTMLTemplate = template.Must(template.ParseFiles("assets/templates/search_results_layout_template.html"))
-	p.TripHTMLTemplate = template.Must(template.ParseFiles("assets/templates/trip_plan_details_template.html"))
 	switch strings.ToLower(os.Getenv("ENVIRONMENT")) {
 	case "production":
 		p.Environment = ProductionEnvironment
@@ -542,14 +535,6 @@ func (p *MyPlanner) processPlanningResp(ctx context.Context, request *PlanningRe
 	return response
 }
 
-func (p *MyPlanner) searchPageHandler(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "search_page.html", gin.H{})
-}
-
-func (p *MyPlanner) homePageHandler(ctx *gin.Context) {
-	ctx.Redirect(http.StatusMovedPermanently, "/v1/")
-}
-
 func (p *MyPlanner) getOptimalPlan(ctx *gin.Context) {
 	req := &PlanningRequest{}
 
@@ -623,13 +608,7 @@ func (p *MyPlanner) getPlanningApi(ctx *gin.Context) {
 	userView, authenticationErr = p.UserAuthentication(ctx, user.LevelRegular)
 	if authenticationErr != nil {
 		logger.Debug(authenticationErr)
-		if authenticationErr.IsTokenError() {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": authenticationErr.Error()})
-			return
-		}
-
-		// for JWT-based authentications, redirect users to the login page
-		p.login(ctx)
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": authenticationErr.GetErrorMessage()})
 		return
 	}
 
@@ -704,11 +683,11 @@ func (p *MyPlanner) getPlanningApi(ctx *gin.Context) {
 
 	if planningResp.Err != nil {
 		if planningResp.StatusCode == InvalidRequestLocation {
-			ctx.String(http.StatusBadRequest, planningResp.Err.Error())
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": planningResp.Err.Error()})
 		} else if planningResp.StatusCode == NoValidSolution {
-			ctx.Redirect(http.StatusPermanentRedirect, "/v1")
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "no valid travel plan found"})
 		} else if planningResp.StatusCode == InternalError {
-			ctx.Redirect(http.StatusPermanentRedirect, "/v1")
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
 		return
 	}
@@ -716,12 +695,7 @@ func (p *MyPlanner) getPlanningApi(ctx *gin.Context) {
 		logger.Error(err)
 	}
 
-	jsonOnly := ctx.DefaultQuery("json_only", "false")
-	if jsonOnly != "false" {
-		ctx.JSON(http.StatusOK, planningResp)
-		return
-	}
-	utils.LogErrorWithLevel(p.ResultHTMLTemplate.Execute(ctx.Writer, planningResp), utils.LogError)
+	ctx.JSON(http.StatusOK, planningResp)
 }
 
 func (p *MyPlanner) formalizeLocation(ctx context.Context, fields []string, location *POI.Location) error {
@@ -821,14 +795,7 @@ func (p *MyPlanner) getUserSavedPlanDetails(ctx *gin.Context) {
 
 	wg.Wait()
 
-	resp.ApiKey = p.MapsClientApiKey
-	jsonOnly, _ := strconv.ParseBool(strings.ToLower(ctx.DefaultQuery("json_only", "false")))
-	if jsonOnly {
-		ctx.JSON(http.StatusOK, resp)
-		return
-	}
-
-	utils.LogErrorWithLevel(p.TripHTMLTemplate.Execute(ctx.Writer, resp), utils.LogError)
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (p *MyPlanner) getPlanDetails(ctx *gin.Context) {
@@ -840,10 +807,11 @@ func (p *MyPlanner) getPlanDetails(ctx *gin.Context) {
 	cacheErr := p.RedisClient.FetchSingleRecord(ctx, planRecordRedisKey, &record)
 	if cacheErr != nil {
 		if errors.Is(cacheErr, redis.Nil) {
-			ctx.Redirect(http.StatusTemporaryRedirect, "/v1/404")
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "plan not found"})
+			return
 		}
 		logger.Errorf("Error while fetching plan with key %s: %v", planRecordRedisKey, cacheErr)
-		ctx.String(http.StatusInternalServerError, cacheErr.Error())
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": cacheErr.Error()})
 		return
 	}
 
@@ -866,7 +834,6 @@ func (p *MyPlanner) getPlanDetails(ctx *gin.Context) {
 		TravelDate:        travelDate,
 		Score:             record.Score,
 		ScoreOld:          record.ScoreOld,
-		ApiKey:            p.MapsClientApiKey,
 	}
 
 	wg := sync.WaitGroup{}
@@ -886,14 +853,7 @@ func (p *MyPlanner) getPlanDetails(ctx *gin.Context) {
 	}
 	wg.Wait()
 
-	jsonOnly, _ := strconv.ParseBool(strings.ToLower(ctx.DefaultQuery("json_only", "false")))
-	if jsonOnly {
-		ctx.JSON(http.StatusOK, tripResp)
-		return
-	}
-
-	logger.Debugf("lat/lng are: %+v", tripResp.LatLongs)
-	utils.LogErrorWithLevel(p.TripHTMLTemplate.Execute(ctx.Writer, tripResp), utils.LogError)
+	ctx.JSON(http.StatusOK, tripResp)
 }
 
 func (p *MyPlanner) asyncGetTripRespPlaceDetails(ctx context.Context, wg *sync.WaitGroup, resp *PlaceDetailsResp, place POI.Place) {
@@ -915,22 +875,6 @@ func (p *MyPlanner) placeDetailsResp(ctx context.Context, place POI.Place) (Plac
 		PhotoURL:         string(photoURL),
 		Summary:          place.GetSummary(),
 	}, err
-}
-
-func (p *MyPlanner) login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "login_page.html", gin.H{})
-}
-
-func (p *MyPlanner) signup(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "signup_page.html", gin.H{})
-}
-
-func (p *MyPlanner) planTemplate(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "plan_template.html", gin.H{})
-}
-
-func (p *MyPlanner) userProfile(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "user_profile.html", gin.H{})
 }
 
 // travel plan customization handler
@@ -1077,22 +1021,6 @@ func (p *MyPlanner) userResetPassword(ctx *gin.Context) {
 	if err := p.RedisClient.SetPassword(ctx, r); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-}
-
-func (p *MyPlanner) forgotPasswordPage(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "forgot_password_page.html", gin.H{})
-}
-
-func (p *MyPlanner) resetPasswordPage(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "reset_password_page.html", gin.H{})
-}
-
-func (p *MyPlanner) fourZeroFourPage(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "404.html", gin.H{})
-}
-
-func (p *MyPlanner) aboutPage(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "about.html", gin.H{})
 }
 
 // when users click on the reset password button this handler requests mailer to send password reset emails
@@ -1330,16 +1258,26 @@ func (p *MyPlanner) SetupRouter(serverPort string) *http.Server {
 		c.Header("X-Frame-Options", "SAMEORIGIN")
 		c.Next()
 	})
-	myRouter.LoadHTMLGlob("assets/templates/*")
-	myRouter.Static("/v1/assets", "assets")
 	// trace ID
 	myRouter.Use(requestid.New())
-	myRouter.NoRoute(p.fourZeroFourPage)
+	myRouter.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	})
 
 	// cors settings
-	// TODO: change to front-end domain once front-end server is deployed
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
 	myRouter.ForwardedByClientIP = true
-	myRouter.Use(cors.Default())
+	myRouter.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", frontendURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
+		ExposeHeaders:    []string{"Set-Cookie"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Only apply rate limiting in non-development environments
 	if p.Environment != DevelopmentEnvironment {
@@ -1347,35 +1285,40 @@ func (p *MyPlanner) SetupRouter(serverPort string) *http.Server {
 		myRouter.Use(middleware)
 	}
 
-	myRouter.GET("/", p.homePageHandler)
-
 	v1 := myRouter.Group("/v1")
 	{
-		v1.GET("/", p.searchPageHandler)
 		v1.GET("/plans", p.getPlanningApi)
 		v1.POST("/signup", p.UserEmailVerify)
 		v1.GET("/verify", p.userClickOnEmailVerification)
 		v1.POST("/login", p.userLogin)
 		v1.PUT("/reset-password-backend", p.userResetPassword)
 		v1.GET("/reverse-geocoding", p.reverseGeocodingHandler)
-		v1.GET("/log-in", p.login)
-		v1.GET("/sign-up", p.signup)
 		v1.GET("/plans/:id", p.getPlanDetails)
 		v1.GET("/cities", p.getCitiesHandler)
 		v1.POST("/customize", p.customize)
-		v1.GET("/template", p.planTemplate)
 		v1.GET("/login-google", p.handleLogin)
 		v1.GET("/callback-google", p.oauthCallback)
-		v1.GET("/forgot-password", p.forgotPasswordPage)
-		v1.GET("/reset-password", p.resetPasswordPage)
-		v1.GET("/404", p.fourZeroFourPage)
-		v1.GET("/about", p.aboutPage)
 		v1.GET("/send-password-reset-email", p.resetPasswordHandler)
 		v1.POST("/nearby-cities", p.getNearbyCities)
 		v1.POST("/optimal-plan", p.getOptimalPlan)
 		v1.POST("/create-token", p.createNewPAT)
 		v1.DELETE("/revoke-token", p.RevokePAT)
 		v1.GET("/list-tokens", p.ListPATs)
+
+		// Auth check endpoint for frontend
+		v1.GET("/me", func(ctx *gin.Context) {
+			userView, authErr := p.UserAuthentication(ctx, user.LevelRegular)
+			if authErr != nil {
+				ctx.JSON(http.StatusUnauthorized, gin.H{"error": authErr.GetErrorMessage()})
+				return
+			}
+			ctx.JSON(http.StatusOK, gin.H{
+				"username":   userView.Username,
+				"email":      userView.Email,
+				"user_level": userView.UserLevel,
+			})
+		})
+
 		migrations := v1.Group("/migrate")
 		{
 			migrations.GET("/user-ratings-total", p.UserRatingsTotalMigrationHandler)
@@ -1389,7 +1332,6 @@ func (p *MyPlanner) SetupRouter(serverPort string) *http.Server {
 
 		v1.POST("/plan-summary", p.planSummary)
 
-		v1.GET("/profile", p.userProfile)
 		users := v1.Group("/users")
 		{
 			users.GET("/:username/favorites", p.userFavoritesHandler)

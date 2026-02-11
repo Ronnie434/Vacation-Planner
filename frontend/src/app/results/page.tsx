@@ -176,7 +176,7 @@ function ResultsContent() {
         </p>
       </div>
 
-      <Accordion type="single" collapsible className="space-y-2" defaultValue={data.travel_plans[0]?.id}>
+      <Accordion type="multiple" className="space-y-2" defaultValue={[data.travel_plans[0]?.id]}>
         {data.travel_plans.map((plan, idx) => (
           <AccordionItem key={plan.id} value={plan.id}>
             <AccordionTrigger className="text-left">

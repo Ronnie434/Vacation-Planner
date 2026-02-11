@@ -101,7 +101,35 @@ func (p *MyPlanner) userLogin(ctx *gin.Context) {
 		return
 	}
 
-	p.loginHelper(ctx, c, true)
+	logger := iowrappers.Logger
+	u, token, tokenExpirationTime, loginErr := p.RedisClient.Authenticate(ctx, c)
+	if err := p.RedisClient.UpdateUser(ctx, &u); err != nil {
+		logger.Errorf("failed to update user %s: %v", u.Username, err)
+	}
+	if loginErr != nil {
+		ctx.JSON(http.StatusUnauthorized, UserLoginResponse{
+			Email:  c.Email,
+			Jwt:    "",
+			Status: "Unauthorized",
+		})
+		return
+	}
+
+	logger.Infof("user is logged in: %+v", u)
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     "JWT",
+		Value:    token,
+		Expires:  tokenExpirationTime,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+	})
+	ctx.JSON(http.StatusOK, UserLoginResponse{
+		Email:    u.Email,
+		Username: u.Username,
+		Jwt:      token,
+		Status:   "OK",
+	})
 }
 
 func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLogin bool) (loggedIn bool, jwtToken string) {
@@ -121,15 +149,16 @@ func (p *MyPlanner) loginHelper(ctx *gin.Context, c user.Credential, frontEndLog
 			})
 		}
 		return false, ""
-	} else {
-		logger.Infof("user is logged in: %+v", u)
 	}
 
+	logger.Infof("user is logged in: %+v", u)
 	http.SetCookie(ctx.Writer, &http.Cookie{
-		Name:    "JWT",
-		Value:   token,
-		Expires: tokenExpirationTime,
-		Secure:  true,
+		Name:     "JWT",
+		Value:    token,
+		Expires:  tokenExpirationTime,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
 	})
 	return true, token
 }

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ColorThemeProvider } from "@/contexts/color-theme-context";
 import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -33,13 +34,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <QueryProvider>
-            <AuthProvider>
-              <Navbar />
-              <main className="mx-auto max-w-7xl px-4 py-4 sm:py-6">{children}</main>
-              <Toaster />
-            </AuthProvider>
-          </QueryProvider>
+          <ColorThemeProvider>
+            <QueryProvider>
+              <AuthProvider>
+                <Navbar />
+                <main className="mx-auto max-w-7xl px-4 py-4 sm:py-6">{children}</main>
+                <Toaster />
+              </AuthProvider>
+            </QueryProvider>
+          </ColorThemeProvider>
         </ThemeProvider>
       </body>
     </html>
