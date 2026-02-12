@@ -1047,7 +1047,28 @@ func (p *MyPlanner) oauthCallback(ctx *gin.Context) {
 		if loggedIn, jwtToken := p.loginHelper(ctx, u, false); loggedIn {
 			ctx.Redirect(http.StatusFound, frontendURL+"/auth/callback?token="+url.QueryEscape(jwtToken))
 		} else {
-			ctx.Redirect(http.StatusFound, frontendURL+"/login")
+			// Auto-register new Google OAuth users
+			email := strings.ToLower(userCredentials.Email)
+			username := strings.Split(email, "@")[0]
+			// Append short UUID suffix to avoid username collisions
+			username = username + "-" + uuid.NewString()[:8]
+			newUser := user.View{
+				Username:  username,
+				Email:     email,
+				UserLevel: user.LevelStringRegular,
+			}
+			if _, createErr := p.RedisClient.CreateUser(ctx, newUser, true); createErr != nil {
+				logger.Errorf("failed to auto-register Google OAuth user %s: %v", email, createErr)
+				ctx.Redirect(http.StatusFound, frontendURL+"/login")
+				return
+			}
+			logger.Infof("auto-registered Google OAuth user %s with username %s", email, username)
+			if loggedIn, jwtToken := p.loginHelper(ctx, u, false); loggedIn {
+				ctx.Redirect(http.StatusFound, frontendURL+"/auth/callback?token="+url.QueryEscape(jwtToken))
+			} else {
+				logger.Errorf("failed to login auto-registered Google OAuth user %s", email)
+				ctx.Redirect(http.StatusFound, frontendURL+"/login")
+			}
 		}
 	}
 }
