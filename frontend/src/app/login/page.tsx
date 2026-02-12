@@ -45,7 +45,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-4 -mb-4 sm:-mt-6 sm:-mb-6 flex min-h-screen w-screen">
+    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-4 -mb-4 sm:-mt-6 sm:-mb-6 flex min-h-screen w-screen bg-background">
       {/* Left branded panel */}
       <div className="hidden md:flex md:w-1/2 lg:w-[55%] bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
         <div className="ml-auto flex w-full max-w-lg flex-col justify-between p-10">
@@ -115,14 +115,14 @@ function LoginContent() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex w-full flex-col justify-center px-6 py-12 md:w-1/2 lg:w-[45%] bg-background">
-        {/* Mobile brand header */}
-        <div className="mb-8 flex items-center gap-2 md:hidden">
-          <UnwindLogo size={28} />
-          <span className="text-xl font-bold text-primary">Unwind</span>
-        </div>
-
+      <div className="flex w-full min-h-screen flex-col justify-center px-6 py-8 md:min-h-0 md:w-1/2 md:py-12 lg:w-[45%] bg-background">
         <div className="mx-auto w-full max-w-sm">
+          {/* Mobile brand header */}
+          <Link href="/" className="mb-10 flex items-center gap-3.5 md:hidden">
+            <UnwindLogo size={56} />
+            <span className="text-3xl font-bold tracking-tight text-primary">Unwind</span>
+          </Link>
+
           <div className="mb-8">
             <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
             <p className="mt-1 text-sm text-muted-foreground">
