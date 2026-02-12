@@ -71,6 +71,16 @@ export interface TravelPlanView {
 
 export interface CityView {
   city: string;
+  region: string;
+  country: string;
+}
+
+export interface Favorites {
+  most_frequent_search: string;
+}
+
+export interface ReverseGeocodeResult {
+  city: string;
   admin_area_level_one: string;
   country: string;
 }

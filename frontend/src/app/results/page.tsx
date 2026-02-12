@@ -124,10 +124,10 @@ function ResultsContent() {
     }
   };
 
-  const handleFeedback = async (planId: string, rating: string) => {
+  const handleFeedback = async (planId: string, planSpec: string, like: boolean) => {
     if (!isAuthenticated || !user) return;
     try {
-      await submitFeedback(user.username, { plan_id: planId, rating });
+      await submitFeedback(user.username, { plan_id: planId, plan_spec: planSpec, like });
       toast.success("Feedback submitted");
     } catch {
       toast.error("Failed to submit feedback");
@@ -275,14 +275,14 @@ function ResultsContent() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleFeedback(plan.id, "like")}
+                    onClick={() => handleFeedback(plan.id, plan.planning_spec, true)}
                   >
                     Like
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleFeedback(plan.id, "dislike")}
+                    onClick={() => handleFeedback(plan.id, plan.planning_spec, false)}
                   >
                     Dislike
                   </Button>

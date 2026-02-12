@@ -36,7 +36,11 @@ export function useGeolocation() {
         const { latitude, longitude } = position.coords;
         try {
           const result = await reverseGeocode(latitude, longitude);
-          const addr = result?.formatted_address || `${longitude}, ${latitude}`;
+          let addr = `${longitude}, ${latitude}`;
+          if (result) {
+            const parts = [result.city, result.admin_area_level_one, result.country].filter(Boolean);
+            if (parts.length > 0) addr = parts.join(", ");
+          }
           setState({
             latitude,
             longitude,

@@ -20,8 +20,8 @@ interface Suggestion {
 }
 
 function formatCity(city: CityView): string {
-  if (city.admin_area_level_one) {
-    return `${city.city}, ${city.admin_area_level_one}, ${city.country}`;
+  if (city.region) {
+    return `${city.city}, ${city.region}, ${city.country}`;
   }
   return `${city.city}, ${city.country}`;
 }

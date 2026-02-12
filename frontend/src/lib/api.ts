@@ -8,6 +8,8 @@ import type {
   SearchParams,
   UserProfile,
   CityView,
+  Favorites,
+  ReverseGeocodeResult,
 } from "@/types/api";
 
 const api = axios.create({
@@ -81,11 +83,38 @@ export async function getPlans(params: SearchParams) {
   return data;
 }
 
+// Backend TripDetailResp/PlaceDetailsResp lack JSON tags, so fields come back
+// as PascalCase. This normalizer handles both formats for compatibility.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeTripDetail(data: any): TripDetailResponse {
+  return {
+    original_plan_id: data.original_plan_id ?? data.OriginalPlanID,
+    lat_longs: data.lat_longs ?? data.LatLongs,
+    place_categories: data.place_categories ?? data.PlaceCategories,
+    place_details: (data.place_details ?? data.PlaceDetails)?.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p: any) => ({
+        id: p.id ?? p.ID,
+        name: p.name ?? p.Name,
+        url: p.url ?? p.URL,
+        formatted_address: p.formatted_address ?? p.FormattedAddress,
+        photo_url: p.photo_url ?? p.PhotoURL,
+        summary: p.summary ?? p.Summary,
+      })
+    ),
+    shown_active: data.shown_active ?? data.ShownActive,
+    travel_destination: data.travel_destination ?? data.TravelDestination,
+    travel_date: data.travel_date ?? data.TravelDate,
+    score: data.score ?? data.Score,
+    score_old: data.score_old ?? data.ScoreOld,
+  };
+}
+
 export async function getPlanDetails(id: string, date?: string) {
-  const { data } = await api.get<TripDetailResponse>(`/plans/${id}`, {
+  const { data } = await api.get(`/plans/${id}`, {
     params: { date, json_only: true },
   });
-  return data;
+  return normalizeTripDetail(data);
 }
 
 // --- Cities ---
@@ -98,7 +127,7 @@ export async function searchCities(term: string) {
 
 // --- Reverse Geocoding ---
 export async function reverseGeocode(lat: number, lng: number) {
-  const { data } = await api.get("/reverse-geocoding", {
+  const { data } = await api.get<{ results: ReverseGeocodeResult }>("/reverse-geocoding", {
     params: { lat, lng },
   });
   return data.results;
@@ -137,16 +166,16 @@ export async function deletePlan(username: string, planId: string) {
 }
 
 export async function getUserSavedPlanDetails(planId: string) {
-  const { data } = await api.get<TripDetailResponse>(
+  const { data } = await api.get(
     `/users/plan/${planId}`,
     { params: { json_only: true } }
   );
-  return data;
+  return normalizeTripDetail(data);
 }
 
 // --- Favorites ---
 export async function getUserFavorites(username: string) {
-  const { data } = await api.get(`/users/${username}/favorites`);
+  const { data } = await api.get<Favorites>(`/users/${username}/favorites`);
   return data;
 }
 

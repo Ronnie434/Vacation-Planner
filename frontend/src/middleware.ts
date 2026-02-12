@@ -7,6 +7,23 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("JWT")?.value;
 
+  // API routes: proxy to backend with explicit cookie forwarding
+  if (pathname.startsWith("/api/")) {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+    const apiPath = pathname.replace(/^\/api/, "/v1");
+    const url = new URL(apiPath + request.nextUrl.search, backendUrl);
+
+    const requestHeaders = new Headers(request.headers);
+    if (token) {
+      requestHeaders.set("cookie", `JWT=${token}`);
+    }
+
+    return NextResponse.rewrite(url, {
+      request: { headers: requestHeaders },
+    });
+  }
+
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
@@ -33,9 +50,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, sitemap.xml, robots.txt
-     * - api routes (handled by rewrites)
      * - public assets
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|api/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

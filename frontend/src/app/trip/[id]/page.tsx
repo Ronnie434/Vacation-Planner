@@ -56,7 +56,7 @@ function TripContent() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !data.lat_longs || !data.place_details) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-destructive">Failed to load trip details.</p>
