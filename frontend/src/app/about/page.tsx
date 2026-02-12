@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function AboutPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">About Vacation Planner</h1>
+      <h1 className="text-2xl font-bold">About Unwind</h1>
       <Card>
         <CardHeader>
-          <CardTitle>What is Vacation Planner?</CardTitle>
+          <CardTitle>What is Unwind?</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-muted-foreground">
           <p>
-            Vacation Planner is an intelligent travel planning tool that helps
+            Unwind is an intelligent travel planning tool that helps
             you discover and organize the perfect day-trip itinerary for any
             destination.
           </p>

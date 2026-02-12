@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { UnwindLogo } from "@/components/unwind-logo";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/auth-context";
@@ -11,7 +12,6 @@ import {
 } from "@/contexts/color-theme-context";
 import {
   Menu,
-  Plane,
   Sun,
   Moon,
   User,
@@ -54,6 +54,11 @@ export function Navbar() {
     return null;
   }
 
+  // Hide main navbar on landing page (it has its own nav)
+  if (pathname === "/" && !user) {
+    return null;
+  }
+
   const links = [
     { href: "/plan/customize", label: "Customize Plan", icon: Compass },
     { href: "/about", label: "About", icon: Info },
@@ -71,10 +76,8 @@ export function Navbar() {
             href="/"
             className="group flex items-center gap-2.5 text-lg font-bold tracking-tight text-primary transition-colors"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:scale-105">
-              <Plane className="h-5 w-5" />
-            </div>
-            <span className="hidden sm:inline">Vacation Planner</span>
+            <UnwindLogo size={36} className="transition-transform group-hover:scale-105" />
+            <span className="hidden sm:inline">Unwind</span>
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -226,7 +229,7 @@ export function Navbar() {
             <SheetContent side="right" className="w-[280px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5 text-primary" />
+                  <UnwindLogo size={24} />
                   Menu
                 </SheetTitle>
               </SheetHeader>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { LandingPage } from "@/components/landing-page";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,7 +24,6 @@ import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { format } from "date-fns";
 import {
-  Plane,
   MapPin,
   CalendarDays,
   DollarSign,
@@ -36,6 +37,24 @@ import {
 import { toast } from "sonner";
 
 export default function HomePage() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  return <SearchPage />;
+}
+
+function SearchPage() {
   const router = useRouter();
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | undefined>(undefined);

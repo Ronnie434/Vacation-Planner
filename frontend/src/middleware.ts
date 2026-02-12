@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback"];
+// Routes accessible without authentication
+const publicRoutes = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback"];
+
+// Auth pages that should redirect to / when already logged in
+const authOnlyRoutes = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -35,8 +39,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from auth pages
-  if (token && isPublicRoute) {
+  // Redirect authenticated users away from auth pages (not /)
+  const isAuthRoute = authOnlyRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+  if (token && isAuthRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

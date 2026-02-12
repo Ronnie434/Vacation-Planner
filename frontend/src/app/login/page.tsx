@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Plane, MapPin, Calendar, Compass, Sparkles } from "lucide-react";
+import { UnwindLogo } from "@/components/unwind-logo";
+import { MapPin, Calendar, Compass, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -44,79 +45,81 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen -m-4 sm:-m-6">
+    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-4 -mb-4 sm:-mt-6 sm:-mb-6 flex min-h-screen w-screen">
       {/* Left branded panel */}
-      <div className="hidden md:flex md:w-1/2 lg:w-[55%] flex-col justify-between bg-gradient-to-br from-primary to-primary/80 p-10 text-primary-foreground">
-        <div>
-          <Link href="/" className="flex items-center gap-2">
-            <Plane className="h-8 w-8" />
-            <span className="text-2xl font-bold tracking-tight">Vacation Planner</span>
-          </Link>
-        </div>
-
-        <div className="space-y-8">
+      <div className="hidden md:flex md:w-1/2 lg:w-[55%] bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+        <div className="ml-auto flex w-full max-w-lg flex-col justify-between p-10">
           <div>
-            <h1 className="text-4xl font-bold leading-tight lg:text-5xl">
-              Plan your dream
-              <br />
-              vacation with AI
-            </h1>
-            <p className="mt-4 max-w-md text-lg text-primary-foreground/80">
-              Discover personalized travel itineraries, explore hidden gems, and make every trip unforgettable.
-            </p>
+            <Link href="/" className="flex items-center gap-2">
+              <UnwindLogo size={40} />
+              <span className="text-2xl font-bold tracking-tight">Unwind</span>
+            </Link>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-medium">Smart Destinations</p>
-                <p className="text-sm text-primary-foreground/70">AI-powered place recommendations</p>
-              </div>
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-4xl font-bold leading-tight lg:text-5xl">
+                Plan your dream
+                <br />
+                vacation with AI
+              </h1>
+              <p className="mt-4 max-w-md text-lg text-primary-foreground/80">
+                Discover personalized travel itineraries, explore hidden gems, and make every trip unforgettable.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
-                <Calendar className="h-5 w-5" />
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Smart Destinations</p>
+                  <p className="text-sm text-primary-foreground/70">AI-powered place recommendations</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">Day-by-Day Plans</p>
-                <p className="text-sm text-primary-foreground/70">Optimized daily itineraries</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Day-by-Day Plans</p>
+                  <p className="text-sm text-primary-foreground/70">Optimized daily itineraries</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
-                <Compass className="h-5 w-5" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Explore Nearby</p>
+                  <p className="text-sm text-primary-foreground/70">Discover surrounding cities & attractions</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">Explore Nearby</p>
-                <p className="text-sm text-primary-foreground/70">Discover surrounding cities & attractions</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-medium">Save & Customize</p>
-                <p className="text-sm text-primary-foreground/70">Tailor plans to your preferences</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Save & Customize</p>
+                  <p className="text-sm text-primary-foreground/70">Tailor plans to your preferences</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <p className="text-sm text-primary-foreground/50">
+            &copy; {new Date().getFullYear()} Unwind
+          </p>
         </div>
-
-        <p className="text-sm text-primary-foreground/50">
-          &copy; {new Date().getFullYear()} Vacation Planner
-        </p>
       </div>
 
       {/* Right form panel */}
       <div className="flex w-full flex-col justify-center px-6 py-12 md:w-1/2 lg:w-[45%] bg-background">
         {/* Mobile brand header */}
         <div className="mb-8 flex items-center gap-2 md:hidden">
-          <Plane className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold text-primary">Vacation Planner</span>
+          <UnwindLogo size={28} />
+          <span className="text-xl font-bold text-primary">Unwind</span>
         </div>
 
         <div className="mx-auto w-full max-w-sm">
