@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 import { signup } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UnwindLogo } from "@/components/unwind-logo";
 import { MapPin, Calendar, Compass, Sparkles } from "lucide-react";
+
+function parseSignupError(error: string): string {
+  if (/already exists/i.test(error)) {
+    return "An account with that email or username already exists. Please try a different one or sign in.";
+  }
+  if (/invalid email/i.test(error)) {
+    return "Please enter a valid email address.";
+  }
+  return "Failed to create account. Please try again.";
+}
 
 export default function SignupPage() {
   const [username, setUsername] = useState("");
@@ -33,8 +44,12 @@ export default function SignupPage() {
     try {
       const data = await signup(username, email, password);
       setSuccess(data.message || "Account created! Check your email to verify.");
-    } catch {
-      setError("Failed to create account. Please try again.");
+    } catch (err: unknown) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? parseSignupError(err.response.data.error)
+          : "Failed to create account. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }
