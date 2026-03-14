@@ -74,7 +74,7 @@ export default function ProfilePage() {
             </p>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {plans.map((plan: TravelPlanView) => (
+              {[...plans].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((plan: TravelPlanView) => (
                 <Card key={plan.id}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">

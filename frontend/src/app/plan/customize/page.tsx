@@ -76,20 +76,18 @@ const categoryConfig = {
     icon: Landmark,
     label: "Visit",
     description: "Parks, museums, galleries, attractions",
-    color:
-      "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300",
+    color: "border bg-card",
     badge:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+      "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
     dot: "bg-blue-500 dark:bg-blue-400",
   },
   Eatery: {
     icon: Utensils,
     label: "Eatery",
     description: "Restaurants, cafes, food spots",
-    color:
-      "bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950 dark:border-orange-800 dark:text-orange-300",
+    color: "border bg-card",
     badge:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+      "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300",
     dot: "bg-orange-500 dark:bg-orange-400",
   },
 } as const;
@@ -525,7 +523,7 @@ export default function CustomizePlanPage() {
                     <GripVertical className="h-5 w-5 opacity-30" />
                   </div>
 
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 dark:bg-black/20 sm:h-9 sm:w-9">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted sm:h-9 sm:w-9">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
 
